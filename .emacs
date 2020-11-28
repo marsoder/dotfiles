@@ -266,6 +266,6 @@ There are two things you can do about this warning:
 
 (straight-use-package '(apheleia :host github :repo "raxod502/apheleia"))
 (apheleia-global-mode +1)
-
+;; 
 ;; set max line length too 88 which is python black magic number  
 (setq-default flycheck-flake8-maximum-line-length 88)
