@@ -122,6 +122,9 @@ static char *gnus-pointer[] = {
 
 
 
+
+
+
 (require 'package)
 (let* ((no-ssl (and (memq system-type '(windows-nt ms-dos))
                     (not (gnutls-available-p))))
@@ -140,6 +143,62 @@ There are two things you can do about this warning:
     ;; For important compatibility libraries like cl-lib
     (add-to-list 'package-archives (cons "gnu" (concat proto "://elpa.gnu.org/packages/")))))
 (package-initialize)
+(package-refresh-contents)
+(package-install 'use-package)
+
+
+
+;; installed if not installed
+(require 'cl)
+;; Guarantee all packages are installed on start
+(defvar packages-list
+  '(
+    ;; Example package list
+    use-package
+    company   
+    doom-themes
+    evil
+    evil-surround
+    evil-args
+    evil-commentary
+    evil-matchit
+    evil-indent-plus
+    linum-relative
+    impatient-mode
+    flycheck
+    pylint
+    jedi
+    ghc
+    haskell-mode
+    elpy
+    elpygen
+    yasnippet-snippets
+    yasnippet
+    magit
+    ace-window
+    yaml-mode
+    which-key
+    
+    )
+  "List of packages needs to be installed at launch")
+
+(defun has-package-not-installed ()
+  (loop for p in packages-list
+        when (not (package-installed-p p)) do (return t)
+        finally (return nil)))
+
+(when (has-package-not-installed)
+  ;; Check for new packages (package versions)
+  (message "%s" "Get latest versions of all packages...")
+  (package-refresh-contents)
+  (message "%s" " done.")
+  ;; Install the missing packages
+  (dolist (p packages-list)
+    (when (not (package-installed-p p))
+      (package-install p))))
+
+
+
 
 ;; Do not show menu bar
 (menu-bar-mode -1)
@@ -198,11 +257,37 @@ There are two things you can do about this warning:
 (require 'evil-matchit)
 (global-evil-matchit-mode 1)
 
-(require' python)
-(add-hook 'python-mode-hook 'elpy-mode)
+;; enable elpy with flycheck instead
+(use-package flycheck
+  :ensure t
+  :init
+  (global-flycheck-mode t))
 
-;;(require 'pyenv)
-;;(pyenv-activate "~/.pyenv/versions/3.7.5/bin/")
+(use-package python
+  :mode ("\\.py" . python-mode)
+  :ensure t
+  :config
+  (flymake-mode) ;; <- This line makes the trick of disabling flymake in python mode!
+  (use-package elpy
+    :ensure t
+    :init
+    (add-to-list 'auto-mode-alist '("\\.py$" . python-mode))
+    :config
+    (remove-hook 'elpy-modules 'elpy-module-flymake) ;; <- This removes flymake from elpy
+    (setq elpy-rpc-backend "jedi")
+    :bind (:map elpy-mode-map
+              ("M-." . elpy-goto-definition)
+              ("M-," . pop-tag-mark))
+  )
+  (elpy-enable)
+)
+
+
+
+;; enable elpy old
+;; (require' python)
+;; (add-hook 'python-mode-hook 'elpy-mode)
+
 (setq elpy-shell-echo-input 'nil)
 (add-to-list 'default-frame-alist '(fullscreen . maximized))
 
@@ -269,3 +354,5 @@ There are two things you can do about this warning:
 ;; 
 ;; set max line length too 88 which is python black magic number  
 (setq-default flycheck-flake8-maximum-line-length 88)
+;; enable ansible mode yaml hook
+(add-hook 'yaml-mode-hook '(lambda () (ansible 1)))
