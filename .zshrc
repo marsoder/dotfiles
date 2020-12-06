@@ -73,6 +73,8 @@ ZSH_THEME="awesomepanda"
 # Add wisely, as too many plugins slow down shell startup.
 plugins=(git)
 
+# add dotfiles alias
+alias dotfiles='/usr/bin/git --git-dir=/home/xioahei/.dotfiles/ --work-tree=/home/xioahei'
 source $ZSH/oh-my-zsh.sh
 
 # User configuration
