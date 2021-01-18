@@ -143,11 +143,10 @@ There are two things you can do about this warning:
     ;; For important compatibility libraries like cl-lib
     (add-to-list 'package-archives (cons "gnu" (concat proto "://elpa.gnu.org/packages/")))))
 (package-initialize)
+
+
 (package-refresh-contents)
 (package-install 'use-package)
-
-
-
 ;; installed if not installed
 (require 'cl)
 ;; Guarantee all packages are installed on start
@@ -333,8 +332,6 @@ There are two things you can do about this warning:
 ;; change font
 (set-frame-font "Inconsolata 12" nil t)
 ;; straight.el
-
-
 (defvar bootstrap-version)
 (let ((bootstrap-file
        (expand-file-name "straight/repos/straight.el/bootstrap.el" user-emacs-directory))
@@ -356,3 +353,70 @@ There are two things you can do about this warning:
 (setq-default flycheck-flake8-maximum-line-length 88)
 ;; enable ansible mode yaml hook
 (add-hook 'yaml-mode-hook '(lambda () (ansible 1)))
+
+;; configure php mode
+(use-package company
+ :ensure t
+ :config
+ (setq company-idle-delay 0.3)
+ (global-company-mode 1))
+
+(use-package flycheck)
+
+(use-package lsp-mode
+ :config
+ (setq lsp-prefer-flymake nil)
+ :hook (php-mode . lsp)
+ :commands lsp)
+
+(use-package lsp-ui
+ :requires lsp-mode flycheck
+ :config
+ (setq lsp-ui-doc-enable t
+ lsp-ui-doc-use-childframe t
+ lsp-ui-doc-position ‘top
+ lsp-ui-doc-include-signature t
+ lsp-ui-sideline-enable nil
+ lsp-ui-flycheck-enable t
+ lsp-ui-flycheck-list-position ‘right
+ lsp-ui-flycheck-live-reporting t
+ lsp-ui-peek-enable t
+ lsp-ui-peek-list-width 60
+ lsp-ui-peek-peek-height 25
+ lsp-ui-sideline-enable nil)
+
+(add-hook ‘lsp-mode-hook ‘lsp-ui-mode))
+
+(use-package company-lsp
+ :commands company-lsp)
+
+(setq ivy-use-virtual-buffers nil)
+
+(add-hook 'php-mode-hook 'my-php-mode-hook)
+(defun my-php-mode-hook ()
+  (setq indent-tabs-mode t)
+  (let ((my-tab-width 4))
+    (setq tab-width my-tab-width)
+    (setq c-basic-indent my-tab-width)
+    (set (make-local-variable 'tab-stop-list)
+         (number-sequence my-tab-width 200 my-tab-width))))
+;; phpactor
+(use-package phpactor :ensure t)
+(use-package company-phpactor :ensure t)
+(use-package php-mode
+  ;;
+  :hook ((php-mode . (lambda () (set (make-local-variable 'company-backends)
+       '(;; list of backends
+         company-phpactor
+         company-files
+         ))))))
+
+;; I broke the redo functionality somehow;
+;; This unbreaks it :)))
+(use-package undo-tree
+  :config
+  (turn-on-undo-tree-mode))
+(define-key evil-normal-state-map (kbd "C-r") 'undo-tree-redo)
+(define-key evil-normal-state-map (kbd "u") 'undo-tree-undo)
+(global-undo-tree-mode)
+
